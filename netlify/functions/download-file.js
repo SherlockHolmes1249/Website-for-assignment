@@ -34,11 +34,10 @@ exports.handler = async (event) => {
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     };
 
-    // Filename: RegNo_StudentName_Subject.ext
+    // Filename: RegNo_StudentName.ext  e.g. 2024-CS-045_Ali_Hassan.pdf
     const regNo = (meta.studentId || 'Unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
     const name = (meta.studentName || 'Unknown').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
-    const subject = (meta.subject || '').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
-    const downloadName = encodeURIComponent(`${regNo}_${name}_${subject}.${ext}`);
+    const downloadName = encodeURIComponent(`${regNo}_${name}.${ext}`);
 
     return {
       statusCode: 200,
