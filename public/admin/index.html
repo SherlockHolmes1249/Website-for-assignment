@@ -237,8 +237,30 @@
               <button class="btn-primary-sm" onclick="openCreateModal()">＋ Create</button>
             </div>
             <div class="table-wrap">
-              <table><thead><tr><th>Subject</th><th>Due Date</th><th>Submissions</th><th>Action</th></tr></thead>
+              <table><thead><tr><th>Subject</th><th>Due Date</th><th>Submissions</th><th>Actions</th></tr></thead>
               <tbody id="assignments-body"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ASSIGNMENT DETAIL (submissions for one subject) -->
+        <div id="page-assignment-detail" style="display:none">
+          <div style="margin-bottom:1rem">
+            <button class="btn-outline-sm" onclick="backToAssignments()">← Back</button>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 id="detail-title">Submissions</h3>
+                <div id="detail-meta" style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem"></div>
+              </div>
+              <button class="btn-outline-sm" id="detail-download-btn" onclick="downloadByAssignment()">⬇ Download All</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Student Name</th><th>Reg / Roll No.</th><th>File</th><th>Note</th><th>Submitted</th><th>Actions</th></tr></thead>
+                <tbody id="detail-submissions-body"><tr class="empty-row"><td colspan="6">No submissions yet.</td></tr></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -340,9 +362,79 @@
           <td><strong>${escHtml(a.subject)}</strong><br><span style="font-size:0.75rem;color:var(--muted)">${escHtml(a.description||'')}</span></td>
           <td><span style="font-size:0.8rem;${isPast?'color:var(--danger)':'color:var(--success)'}">${due.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span></td>
           <td><span class="badge badge-new">${subCount}</span></td>
-          <td><button class="delete-btn" onclick="deleteAssignment('${a.id}')">🗑</button></td>
+          <td style="white-space:nowrap;display:flex;gap:0.4rem;align-items:center;padding:0.85rem 1rem">
+            <button class="download-btn" onclick="openAssignmentDetail('${a.id}')">👁 View</button>
+            <button class="download-btn" onclick="downloadByAssignment('${a.id}')" ${subCount===0?'disabled style="opacity:0.4;cursor:not-allowed"':''}>⬇ Download</button>
+            <button class="delete-btn" onclick="deleteAssignment('${a.id}')">🗑</button>
+          </td>
         </tr>`;
       }).join('');
+    }
+
+    // --- ASSIGNMENT DETAIL PAGE ---
+    let currentDetailAssignmentId = null;
+
+    function openAssignmentDetail(assignmentId) {
+      currentDetailAssignmentId = assignmentId;
+      const a = assignments.find(x => x.id === assignmentId);
+      if (!a) return;
+
+      // Update title and meta
+      document.getElementById('detail-title').textContent = `📚 ${a.subject} — Submissions`;
+      const due = new Date(a.dueDate);
+      const filtered = submissions.filter(s => s.assignmentId === assignmentId);
+      document.getElementById('detail-meta').textContent =
+        `${filtered.length} submission${filtered.length !== 1 ? 's' : ''} · Due ${due.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}`;
+
+      // Render filtered submissions
+      const tbody = document.getElementById('detail-submissions-body');
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No submissions for this assignment yet.</td></tr>';
+      } else {
+        tbody.innerHTML = filtered.map(s => {
+          const ext = (s.fileName||'').split('.').pop().toLowerCase();
+          const date = new Date(s.submittedAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+          return `<tr>
+            <td><span class="student-name">${escHtml(s.studentName)}</span></td>
+            <td><span class="student-id-cell" style="font-size:0.85rem;color:var(--text);font-weight:600">${escHtml(s.studentId)}</span></td>
+            <td><span class="badge ${ext==='pdf'?'badge-pdf':'badge-doc'}">${ext.toUpperCase()}</span></td>
+            <td style="font-size:0.78rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.note||'—')}</td>
+            <td style="font-size:0.78rem;color:var(--muted)">${date}</td>
+            <td style="white-space:nowrap">
+              <button class="download-btn" onclick="downloadFile('${s.id}')">⬇</button>
+              <button class="delete-btn" onclick="deleteSubmission('${s.id}')">🗑</button>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      // Show detail page
+      ['overview','assignments','submissions'].forEach(p => document.getElementById('page-'+p).style.display='none');
+      document.getElementById('page-assignment-detail').style.display = '';
+      document.getElementById('page-title').textContent = a.subject;
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      closeSidebar();
+    }
+
+    function backToAssignments() {
+      currentDetailAssignmentId = null;
+      document.getElementById('page-assignment-detail').style.display = 'none';
+      document.getElementById('page-assignments').style.display = '';
+      document.getElementById('page-title').textContent = 'Assignments';
+      // Re-highlight assignments nav item
+      document.querySelectorAll('.nav-item').forEach(i => {
+        if (i.textContent.includes('Assignments')) i.classList.add('active');
+      });
+    }
+
+    function downloadByAssignment(assignmentId) {
+      const id = assignmentId || currentDetailAssignmentId;
+      if (!id) return showToast('No assignment selected.', 'error');
+      const a = assignments.find(x => x.id === id);
+      const filtered = submissions.filter(s => s.assignmentId === id);
+      if (!filtered.length) return showToast('No submissions for this assignment.', 'error');
+      showToast(`Preparing ZIP for ${a?.subject || 'assignment'}…`, 'success');
+      window.open(`/.netlify/functions/download-all?token=${encodeURIComponent(token)}&assignmentId=${encodeURIComponent(id)}`, '_blank');
     }
 
     function renderRecentSubmissions() {
