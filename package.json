@@ -1,0 +1,13 @@
+{
+  "name": "assignment-portal",
+  "version": "1.0.0",
+  "description": "Student Assignment Submission Portal",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^7.0.0",
+    "archiver": "^6.0.1",
+    "busboy": "^1.6.0"
+  }
+}
