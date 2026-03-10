@@ -1,4 +1,3 @@
-// netlify/functions/submit-assignment.js
 const { getStore } = require('@netlify/blobs');
 const Busboy = require('busboy');
 
@@ -7,11 +6,20 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
+function getBlobStore(name) {
+  return getStore({
+    name,
+    consistency: 'strong',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_TOKEN,
+  });
+}
+
 function parseMultipart(event) {
   return new Promise((resolve, reject) => {
     const busboy = Busboy({
       headers: { 'content-type': event.headers['content-type'] || event.headers['Content-Type'] },
-      limits: { fileSize: 20 * 1024 * 1024 } // 20MB
+      limits: { fileSize: 20 * 1024 * 1024 }
     });
 
     const fields = {};
@@ -20,9 +28,7 @@ function parseMultipart(event) {
     let fileMime = '';
     let fileTooLarge = false;
 
-    busboy.on('field', (name, val) => {
-      fields[name] = val;
-    });
+    busboy.on('field', (name, val) => { fields[name] = val; });
 
     busboy.on('file', (name, stream, info) => {
       fileName = info.filename;
@@ -30,9 +36,7 @@ function parseMultipart(event) {
       const chunks = [];
       stream.on('data', (chunk) => chunks.push(chunk));
       stream.on('limit', () => { fileTooLarge = true; stream.resume(); });
-      stream.on('end', () => {
-        if (!fileTooLarge) fileBuffer = Buffer.concat(chunks);
-      });
+      stream.on('end', () => { if (!fileTooLarge) fileBuffer = Buffer.concat(chunks); });
     });
 
     busboy.on('finish', () => {
@@ -52,12 +56,8 @@ function parseMultipart(event) {
 }
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders, body: '' };
-  }
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
-  }
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders, body: '' };
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
 
   try {
     const { fields, fileBuffer, fileName, fileMime } = await parseMultipart(event);
@@ -65,12 +65,10 @@ exports.handler = async (event) => {
     if (!fields.assignmentId || !fields.studentName || !fields.studentId) {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Missing required fields' }) };
     }
-
     if (!fileBuffer || !fileName) {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'No file uploaded' }) };
     }
 
-    // Validate file type
     const ext = fileName.split('.').pop().toLowerCase();
     if (!['pdf', 'doc', 'docx'].includes(ext)) {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Only PDF, DOC, DOCX allowed' }) };
@@ -79,20 +77,12 @@ exports.handler = async (event) => {
     const submissionId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const safeFileName = `${submissionId}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 
-    // Store file in blobs
-    const filesStore = getStore({ name: 'submission-files', consistency: 'strong' });
+    const filesStore = getBlobStore('submission-files');
     await filesStore.set(submissionId, fileBuffer, {
-      metadata: {
-        fileName,
-        safeFileName,
-        mimeType: fileMime,
-        studentName: fields.studentName,
-        subject: fields.subject || '',
-      }
+      metadata: { fileName, safeFileName, mimeType: fileMime, studentName: fields.studentName, subject: fields.subject || '' }
     });
 
-    // Store submission metadata
-    const metaStore = getStore({ name: 'submissions', consistency: 'strong' });
+    const metaStore = getBlobStore('submissions');
     const submission = {
       id: submissionId,
       assignmentId: fields.assignmentId,
@@ -105,20 +95,11 @@ exports.handler = async (event) => {
       fileSize: fileBuffer.length,
       submittedAt: new Date().toISOString()
     };
-
     await metaStore.setJSON(submissionId, submission);
 
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: true, submissionId })
-    };
+    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, submissionId }) };
   } catch (e) {
     console.error('Submit error:', e);
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: e.message || 'Submission failed' })
-    };
+    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: e.message || 'Submission failed' }) };
   }
 };

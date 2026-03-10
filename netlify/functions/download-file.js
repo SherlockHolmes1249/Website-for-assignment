@@ -1,24 +1,28 @@
-// netlify/functions/download-file.js
 const { getStore } = require('@netlify/blobs');
 const { verifyToken, getToken } = require('./_auth');
 
+function getBlobStore(name) {
+  return getStore({
+    name,
+    consistency: 'strong',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_TOKEN,
+  });
+}
+
 exports.handler = async (event) => {
   const token = getToken(event);
-  if (!verifyToken(token)) {
-    return { statusCode: 401, body: 'Unauthorized' };
-  }
+  if (!verifyToken(token)) return { statusCode: 401, body: 'Unauthorized' };
 
   const { id } = event.queryStringParameters || {};
   if (!id) return { statusCode: 400, body: 'Missing id' };
 
   try {
-    // Get metadata
-    const metaStore = getStore({ name: 'submissions', consistency: 'strong' });
+    const metaStore = getBlobStore('submissions');
     const meta = await metaStore.get(id, { type: 'json' });
     if (!meta) return { statusCode: 404, body: 'Submission not found' };
 
-    // Get file
-    const filesStore = getStore({ name: 'submission-files', consistency: 'strong' });
+    const filesStore = getBlobStore('submission-files');
     const fileBlob = await filesStore.get(id, { type: 'arrayBuffer' });
     if (!fileBlob) return { statusCode: 404, body: 'File not found' };
 
@@ -44,7 +48,6 @@ exports.handler = async (event) => {
       isBase64Encoded: true
     };
   } catch (e) {
-    console.error('Download error:', e);
     return { statusCode: 500, body: 'Error: ' + e.message };
   }
 };
