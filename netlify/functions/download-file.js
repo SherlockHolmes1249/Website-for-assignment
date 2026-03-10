@@ -1,3 +1,4 @@
+// netlify/functions/download-file.js
 const { getStore } = require('@netlify/blobs');
 const { verifyToken, getToken } = require('./_auth');
 
@@ -26,28 +27,31 @@ exports.handler = async (event) => {
     const fileBlob = await filesStore.get(id, { type: 'arrayBuffer' });
     if (!fileBlob) return { statusCode: 404, body: 'File not found' };
 
-    const ext = meta.fileName.split('.').pop().toLowerCase();
+    const ext = (meta.fileName || '').split('.').pop().toLowerCase();
     const mimeTypes = {
       pdf: 'application/pdf',
       doc: 'application/msword',
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     };
 
-    const safeDownloadName = encodeURIComponent(
-      `${meta.studentName}_${meta.subject}_${meta.fileName}`.replace(/\s+/g, '_')
-    );
+    // Filename: RegNo_StudentName_Subject.ext
+    const regNo = (meta.studentId || 'Unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const name = (meta.studentName || 'Unknown').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+    const subject = (meta.subject || '').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+    const downloadName = encodeURIComponent(`${regNo}_${name}_${subject}.${ext}`);
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': mimeTypes[ext] || 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${safeDownloadName}"`,
+        'Content-Disposition': `attachment; filename="${downloadName}"`,
         'Access-Control-Allow-Origin': '*',
       },
       body: Buffer.from(fileBlob).toString('base64'),
       isBase64Encoded: true
     };
   } catch (e) {
+    console.error('Download error:', e);
     return { statusCode: 500, body: 'Error: ' + e.message };
   }
 };
