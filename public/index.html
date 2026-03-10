@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduSubmit — Assignment Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: rgba(255,255,255,0.07);
+      --accent: #7c6bff;
+      --accent2: #ff6b9d;
+      --accent3: #6bffd8;
+      --text: #f0f0f8;
+      --muted: #7878a0;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --danger: #f87171;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background mesh */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(124,107,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(255,107,157,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 60% 10%, rgba(107,255,216,0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 4rem;
+      background: rgba(10,10,15,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .btn-admin {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-admin:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(124,107,255,0.1);
+      border: 1px solid rgba(124,107,255,0.3);
+      color: var(--accent);
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 .line2 {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.15rem;
+      max-width: 520px;
+      margin: 0 auto 3rem;
+      line-height: 1.7;
+    }
+
+    /* STATS BAR */
+    .stats-bar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      max-width: 600px;
+      margin: 0 auto 5rem;
+    }
+
+    .stat {
+      flex: 1;
+      text-align: center;
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .stat:first-child { border-left: 1px solid var(--border); border-radius: 12px 0 0 12px; }
+    .stat:last-child { border-radius: 0 12px 12px 0; }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ASSIGNMENTS SECTION */
+    .section {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .tab {
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+    .tab.active, .tab:hover {
+      background: var(--surface2);
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    /* ASSIGNMENT CARDS */
+    #assignments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .assignment-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.6rem;
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.5s ease both;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .assignment-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .assignment-card:hover {
+      border-color: rgba(124,107,255,0.3);
+      background: var(--surface2);
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .assignment-card:hover::before { opacity: 1; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+    }
+
+    .subject-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      background: rgba(124,107,255,0.12);
+      border: 1px solid rgba(124,107,255,0.2);
+    }
+
+    .due-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    .due-badge.urgent { background: rgba(248,113,113,0.12); color: var(--danger); border: 1px solid rgba(248,113,113,0.2); }
+    .due-badge.soon { background: rgba(251,191,36,0.12); color: var(--warning); border: 1px solid rgba(251,191,36,0.2); }
+    .due-badge.ok { background: rgba(74,222,128,0.12); color: var(--success); border: 1px solid rgba(74,222,128,0.2); }
+
+    .card-subject {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.01em;
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 1.4rem;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .due-info {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .due-info span { color: var(--text); font-weight: 500; }
+
+    .btn-submit-card {
+      background: linear-gradient(135deg, var(--accent), #9b6bff);
+      color: white;
+      border: none;
+      padding: 0.55rem 1.3rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-submit-card:hover {
+      transform: scale(1.04);
+      box-shadow: 0 8px 24px rgba(124,107,255,0.4);
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--text); }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 520px;
+      padding: 2.5rem;
+      position: relative;
+      animation: modalIn 0.3s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1.2rem; right: 1.2rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { color: var(--text); border-color: var(--accent); }
+
+    .modal h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .modal-subject-tag {
+      display: inline-block;
+      background: rgba(124,107,255,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(124,107,255,0.25);
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      margin-bottom: 1.8rem;
+    }
+
+    .form-group { margin-bottom: 1.3rem; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    /* FILE DROP ZONE */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: var(--surface2);
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(124,107,255,0.05);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .drop-icon { font-size: 2rem; margin-bottom: 0.7rem; }
+    .drop-text { font-size: 0.9rem; color: var(--muted); }
+    .drop-text strong { color: var(--accent); }
+    .drop-hint { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+
+    .file-selected {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(74,222,128,0.08);
+      border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-top: 0.8rem;
+    }
+    .file-selected .file-icon { font-size: 1.3rem; }
+    .file-name { font-size: 0.85rem; font-weight: 500; color: var(--success); }
+    .file-size { font-size: 0.75rem; color: var(--muted); }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), #9b6bff);
+      color: white;
+      border: none;
+      padding: 0.9rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.3s;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 12px 32px rgba(124,107,255,0.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* SUCCESS STATE */
+    .success-modal {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .success-icon {
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      background: rgba(74,222,128,0.12);
+      border: 2px solid rgba(74,222,128,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1.5rem;
+    }
+    .success-modal h2 { font-family: 'Syne', sans-serif; margin-bottom: 0.6rem; }
+    .success-modal p { color: var(--muted); font-size: 0.95rem; }
+
+    /* LOADING SPINNER */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 2000;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 0.9rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      min-width: 280px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { border-color: rgba(248,113,113,0.4); }
+    .toast.success { border-color: rgba(74,222,128,0.4); }
+
+    /* FOOTER */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.5rem; }
+      .hero { padding: 4rem 1.5rem 3rem; }
+      .section { padding: 0 1.5rem 4rem; }
+      #assignments-grid { grid-template-columns: 1fr; }
+      .section-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-logo">EduSubmit</div>
+    <div class="nav-links">
+      <a href="#assignments">Assignments</a>
+      <a href="admin/index.html" class="btn-admin">⚙ Admin</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge">✦ Student Portal</div>
+    <h1>
+      Submit Your<br>
+      <span class="line2">Assignments</span>
+    </h1>
+    <p>A seamless way to turn in your work. Browse open assignments, upload your files, and you're done.</p>
+  </section>
+
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">Open Tasks</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-due-soon">0</div>
+      <div class="stat-label">Due Soon</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-subjects">0</div>
+      <div class="stat-label">Subjects</div>
+    </div>
+  </div>
+
+  <section class="section" id="assignments">
+    <div class="section-header">
+      <h2 class="section-title">Open Assignments</h2>
+      <div class="filter-tabs">
+        <button class="tab active" onclick="filterCards('all', this)">All</button>
+        <button class="tab" onclick="filterCards('urgent', this)">Urgent</button>
+        <button class="tab" onclick="filterCards('soon', this)">Soon</button>
+      </div>
+    </div>
+    <div id="assignments-grid">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <h3>Loading assignments…</h3>
+        <p>Please wait while we fetch open assignments.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBMIT MODAL -->
+  <div class="modal-overlay" id="modal" onclick="closeModalOnOverlay(event)">
+    <div class="modal" id="modal-content">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div id="modal-body">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <footer>
+    Built with ❤ · EduSubmit Portal · <a href="admin/index.html" style="color:var(--accent);text-decoration:none">Admin Panel</a>
+  </footer>
+
+  <script>
+    let assignments = [];
+    let selectedAssignment = null;
+
+    const ICONS = ['📚','📐','🔬','🌍','📝','🎨','🧮','💻','📖','🏛'];
+
+    // Fetch assignments
+    async function loadAssignments() {
+      try {
+        const res = await fetch('/.netlify/functions/get-assignments');
+        const data = await res.json();
+        assignments = data.assignments || [];
+        renderCards(assignments);
+        updateStats();
+      } catch(e) {
+        assignments = [];
+        renderCards([]);
+        updateStats();
+      }
+    }
+
+    function getDueStatus(dueDateStr) {
+      const now = new Date();
+      const due = new Date(dueDateStr);
+      const diff = (due - now) / (1000*60*60*24);
+      if (diff < 1) return 'urgent';
+      if (diff < 3) return 'soon';
+      return 'ok';
+    }
+
+    function formatDueDate(dueDateStr) {
+      const d = new Date(dueDateStr);
+      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function getDaysLeft(dueDateStr) {
+      const now = new Date();
+      const due = new Date(dueDateStr);
+      const diff = Math.ceil((due - now) / (1000*60*60*24));
+      if (diff <= 0) return '⚠ Overdue';
+      if (diff === 1) return '🔴 1 day left';
+      if (diff <= 3) return `🟡 ${diff} days left`;
+      return `🟢 ${diff} days left`;
+    }
+
+    function renderCards(list) {
+      const grid = document.getElementById('assignments-grid');
+      if (!list.length) {
+        grid.innerHTML = `<div class="empty-state">
+          <div class="icon">🎉</div>
+          <h3>No assignments right now</h3>
+          <p>Check back later for new assignments from your instructors.</p>
+        </div>`;
+        return;
+      }
+      grid.innerHTML = list.map((a, i) => {
+        const status = getDueStatus(a.dueDate);
+        const labels = { urgent: '🔴 Due Today', soon: '🟡 Due Soon', ok: '🟢 On Track' };
+        const icon = ICONS[i % ICONS.length];
+        return `
+          <div class="assignment-card" style="animation-delay:${i*0.07}s" data-status="${status}">
+            <div class="card-top">
+              <div class="subject-icon">${icon}</div>
+              <div class="due-badge ${status}">${labels[status]}</div>
+            </div>
+            <div class="card-subject">${escHtml(a.subject)}</div>
+            <div class="card-desc">${escHtml(a.description || 'Submit your assignment file (PDF or Word document).')}</div>
+            <div class="card-footer">
+              <div class="due-info">Due: <span>${formatDueDate(a.dueDate)}</span><br><small>${getDaysLeft(a.dueDate)}</small></div>
+              <button class="btn-submit-card" onclick="openSubmitModal('${a.id}')">
+                Submit ↑
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function filterCards(type, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      if (type === 'all') renderCards(assignments);
+      else renderCards(assignments.filter(a => getDueStatus(a.dueDate) === type));
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').textContent = assignments.length;
+      document.getElementById('stat-due-soon').textContent =
+        assignments.filter(a => ['urgent','soon'].includes(getDueStatus(a.dueDate))).length;
+      const subjects = new Set(assignments.map(a => a.subject));
+      document.getElementById('stat-subjects').textContent = subjects.size;
+    }
+
+    function openSubmitModal(id) {
+      selectedAssignment = assignments.find(a => a.id === id);
+      if (!selectedAssignment) return;
+      document.getElementById('modal-body').innerHTML = buildForm(selectedAssignment);
+      document.getElementById('modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      setupDropzone();
+    }
+
+    function buildForm(a) {
+      return `
+        <h2>Submit Assignment</h2>
+        <div class="modal-subject-tag">📚 ${escHtml(a.subject)}</div>
+        <div class="form-group">
+          <label>Your Full Name</label>
+          <input type="text" id="student-name" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-group">
+          <label>Student ID / Roll No.</label>
+          <input type="text" id="student-id" placeholder="e.g. 2024-CS-045" required>
+        </div>
+        <div class="form-group">
+          <label>Assignment File</label>
+          <div class="drop-zone" id="drop-zone">
+            <input type="file" id="file-input" accept=".pdf,.doc,.docx">
+            <div class="drop-icon">📎</div>
+            <div class="drop-text"><strong>Click to upload</strong> or drag & drop</div>
+            <div class="drop-hint">PDF, DOC, DOCX · Max 20MB</div>
+          </div>
+          <div id="file-info"></div>
+        </div>
+        <div class="form-group">
+          <label>Note to Instructor (optional)</label>
+          <textarea id="student-note" placeholder="Any comments or notes..."></textarea>
+        </div>
+        <button class="btn-primary" id="submit-btn" onclick="submitAssignment()">
+          <span id="submit-label">Submit Assignment</span>
+        </button>`;
+    }
+
+    function setupDropzone() {
+      const dz = document.getElementById('drop-zone');
+      const fi = document.getElementById('file-input');
+      if (!dz || !fi) return;
+      dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+      dz.addEventListener('drop', e => {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+        if (e.dataTransfer.files[0]) showFile(e.dataTransfer.files[0]);
+      });
+      fi.addEventListener('change', () => { if (fi.files[0]) showFile(fi.files[0]); });
+    }
+
+    function showFile(file) {
+      const fi = document.getElementById('file-info');
+      const ext = file.name.split('.').pop().toLowerCase();
+      const icon = ext === 'pdf' ? '📄' : '📝';
+      fi.innerHTML = `<div class="file-selected">
+        <span class="file-icon">${icon}</span>
+        <div>
+          <div class="file-name">${escHtml(file.name)}</div>
+          <div class="file-size">${(file.size/1024/1024).toFixed(2)} MB</div>
+        </div>
+      </div>`;
+    }
+
+    async function submitAssignment() {
+      const name = document.getElementById('student-name')?.value.trim();
+      const sid = document.getElementById('student-id')?.value.trim();
+      const file = document.getElementById('file-input')?.files[0];
+      const note = document.getElementById('student-note')?.value.trim();
+
+      if (!name) return showToast('Please enter your full name.', 'error');
+      if (!sid) return showToast('Please enter your Student ID.', 'error');
+      if (!file) return showToast('Please select a file to submit.', 'error');
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['pdf','doc','docx'].includes(ext)) return showToast('Only PDF, DOC, DOCX files allowed.', 'error');
+      if (file.size > 20 * 1024 * 1024) return showToast('File too large. Max 20MB.', 'error');
+
+      const btn = document.getElementById('submit-btn');
+      const label = document.getElementById('submit-label');
+      btn.disabled = true;
+      label.innerHTML = '<div class="spinner"></div> Submitting…';
+
+      const formData = new FormData();
+      formData.append('assignmentId', selectedAssignment.id);
+      formData.append('subject', selectedAssignment.subject);
+      formData.append('studentName', name);
+      formData.append('studentId', sid);
+      formData.append('note', note || '');
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/.netlify/functions/submit-assignment', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('modal-body').innerHTML = `
+            <div class="success-modal">
+              <div class="success-icon">✓</div>
+              <h2>Submitted!</h2>
+              <p>Your assignment for <strong>${escHtml(selectedAssignment.subject)}</strong> has been received successfully.</p>
+              <p style="margin-top:0.5rem;font-size:0.8rem;color:var(--muted)">Ref: ${data.submissionId || 'N/A'}</p>
+            </div>`;
+          setTimeout(() => { closeModal(); showToast('Assignment submitted successfully! ✓', 'success'); }, 1800);
+        } else {
+          throw new Error(data.error || 'Submission failed');
+        }
+      } catch(e) {
+        btn.disabled = false;
+        label.textContent = 'Submit Assignment';
+        showToast('Submission failed: ' + e.message, 'error');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+      document.body.style.overflow = '';
+      selectedAssignment = null;
+    }
+
+    function closeModalOnOverlay(e) {
+      if (e.target === document.getElementById('modal')) closeModal();
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      const icons = { success: '✓', error: '✕' };
+      t.innerHTML = `<span>${icons[type] || '•'}</span> ${escHtml(msg)}`;
+      t.className = `toast ${type} show`;
+      setTimeout(() => t.className = 'toast', 3500);
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    loadAssignments();
+  </script>
+</body>
+</html>
