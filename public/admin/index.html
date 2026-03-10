@@ -430,37 +430,70 @@
 
     function downloadFile(id) { window.open(`/.netlify/functions/download-file?id=${id}&token=${encodeURIComponent(token)}`,'_blank'); }
 
-    // Build ZIP in the browser to avoid Netlify's 6MB function response limit
+    // ---- PROGRESS BAR ----
+    function showProgress(msg) {
+      let el = document.getElementById('zip-progress');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'zip-progress';
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1a1a26;border:1px solid rgba(124,107,255,0.4);border-radius:14px;padding:1rem 1.5rem;z-index:3000;min-width:280px;max-width:calc(100vw - 2rem);font-family:DM Sans,sans-serif;color:#f0f0f8;font-size:0.88rem;box-shadow:0 8px 32px rgba(0,0,0,0.4)';
+        document.body.appendChild(el);
+      }
+      el.innerHTML = msg;
+      el.style.display = 'block';
+    }
+
+    function hideProgress() {
+      const el = document.getElementById('zip-progress');
+      if (el) el.style.display = 'none';
+    }
+
+    // Build ZIP in browser — avoids Netlify 6MB function limit
     async function buildZip(submissionList, zipName) {
       if (!submissionList.length) return showToast('No submissions to download.', 'error');
 
-      // Show progress
-      showToast(`Downloading ${submissionList.length} file(s)… please wait`, 'success');
+      const total = submissionList.length;
+      showProgress(`<div style="margin-bottom:0.5rem;font-weight:600">📦 Building ZIP…</div><div id="zip-status">Starting…</div><div style="margin-top:0.7rem;background:rgba(255,255,255,0.1);border-radius:999px;height:6px;overflow:hidden"><div id="zip-bar" style="height:100%;background:linear-gradient(90deg,#7c6bff,#ff6b9d);width:0%;transition:width 0.3s;border-radius:999px"></div></div><div style="margin-top:0.4rem;font-size:0.75rem;color:#7878a0" id="zip-count">0 / ${total}</div>`);
 
       const zip = new JSZip();
       let done = 0;
+      let failed = 0;
 
       for (const s of submissionList) {
         try {
+          document.getElementById('zip-status').textContent = `Fetching: ${s.studentName || s.id}`;
           const res = await fetch(`/.netlify/functions/download-file?id=${s.id}&token=${encodeURIComponent(token)}`);
-          if (!res.ok) continue;
-          const blob = await res.blob();
+          if (!res.ok) { failed++; continue; }
+          const arrayBuf = await res.arrayBuffer();
           const ext = (s.fileName || '').split('.').pop().toLowerCase() || 'pdf';
           const regNo = (s.studentId || 'Unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
           const name = (s.studentName || 'Unknown').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
-          zip.file(`${regNo}_${name}.${ext}`, blob);
+          zip.file(`${regNo}_${name}.${ext}`, arrayBuf);
           done++;
-        } catch(e) {}
+        } catch(e) { failed++; }
+        const pct = Math.round((done + failed) / total * 100);
+        document.getElementById('zip-bar').style.width = pct + '%';
+        document.getElementById('zip-count').textContent = `${done + failed} / ${total}${failed > 0 ? ` (${failed} failed)` : ''}`;
       }
 
-      if (done === 0) return showToast('Could not fetch any files.', 'error');
+      if (done === 0) { hideProgress(); return showToast('Could not fetch any files. Try again.', 'error'); }
 
-      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-      const url = URL.createObjectURL(zipBlob);
-      const a = document.createElement('a');
-      a.href = url; a.download = zipName; a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-      showToast(`ZIP ready — ${done} file(s) downloaded! ✓`, 'success');
+      document.getElementById('zip-status').textContent = 'Compressing files…';
+      document.getElementById('zip-bar').style.width = '100%';
+
+      try {
+        const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = url; a.download = zipName;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        hideProgress();
+        showToast(`✓ ZIP downloaded — ${done} file(s)${failed > 0 ? `, ${failed} failed` : ''}`, 'success');
+      } catch(e) {
+        hideProgress();
+        showToast('ZIP generation failed: ' + e.message, 'error');
+      }
     }
 
     function downloadByAssignment(assignmentId) {
