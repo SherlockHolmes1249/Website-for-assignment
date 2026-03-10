@@ -1,7 +1,8 @@
 // netlify/functions/download-all.js
+// Returns JSON list of submission IDs and metadata
+// The actual ZIP is built client-side using JSZip to avoid Netlify's 6MB response limit
 const { getStore } = require('@netlify/blobs');
 const { verifyToken, getToken } = require('./_auth');
-const archiver = require('archiver');
 
 function getBlobStore(name) {
   return getStore({
@@ -12,97 +13,47 @@ function getBlobStore(name) {
   });
 }
 
-exports.handler = async (event) => {
-  const token = getToken(event);
-  if (!verifyToken(token)) return { statusCode: 401, body: 'Unauthorized' };
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Content-Type': 'application/json',
+};
 
-  // Optional: filter by a specific assignment
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders, body: '' };
+
+  const token = getToken(event);
+  if (!verifyToken(token)) return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: 'Unauthorized' }) };
+
   const filterAssignmentId = event.queryStringParameters?.assignmentId || null;
 
   try {
     const metaStore = getBlobStore('submissions');
-    const filesStore = getBlobStore('submission-files');
-
     const { blobs } = await metaStore.list();
-    if (!blobs.length) {
-      return { statusCode: 200, body: 'No submissions found', headers: { 'Content-Type': 'text/plain' } };
-    }
 
-    // Collect all submission metadata
-    const allMeta = [];
+    const submissions = [];
     for (const blob of blobs) {
       try {
         const meta = await metaStore.get(blob.key, { type: 'json' });
         if (meta) {
-          // If filtering by assignment, skip ones that don't match
           if (filterAssignmentId && meta.assignmentId !== filterAssignmentId) continue;
-          allMeta.push(meta);
+          submissions.push({
+            id: meta.id,
+            studentId: meta.studentId,
+            studentName: meta.studentName,
+            subject: meta.subject,
+            fileName: meta.fileName,
+            submittedAt: meta.submittedAt,
+          });
         }
       } catch (e) {}
     }
 
-    if (!allMeta.length) {
-      return { statusCode: 200, body: 'No submissions found for this assignment.', headers: { 'Content-Type': 'text/plain' } };
-    }
-
-    const archive = archiver('zip', { zlib: { level: 6 } });
-    const chunks = [];
-    archive.on('data', chunk => chunks.push(chunk));
-
-    // Group by subject folder
-    const bySubject = {};
-    for (const meta of allMeta) {
-      const folder = (meta.subject || 'Unknown')
-        .replace(/[^a-zA-Z0-9 _-]/g, '')
-        .trim() || 'Unknown';
-      if (!bySubject[folder]) bySubject[folder] = [];
-      bySubject[folder].push(meta);
-    }
-
-    // Add files — named: RegNo_StudentName.ext
-    for (const [subject, metas] of Object.entries(bySubject)) {
-      for (const meta of metas) {
-        try {
-          const fileData = await filesStore.get(meta.id, { type: 'arrayBuffer' });
-          if (fileData) {
-            const ext = (meta.fileName || '').split('.').pop().toLowerCase() || 'pdf';
-            const regNo = (meta.studentId || 'Unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
-            const name = (meta.studentName || 'Unknown').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
-            // Format: RegNo_StudentName.ext  e.g. 2024-CS-045_Ali_Hassan.pdf
-            const fileName = `${regNo}_${name}.${ext}`;
-            // If filtering one subject, no need for a subfolder
-            const archivePath = filterAssignmentId ? fileName : `${subject}/${fileName}`;
-            archive.append(Buffer.from(fileData), { name: archivePath });
-          }
-        } catch (e) {}
-      }
-    }
-
-    await new Promise((resolve, reject) => {
-      archive.on('end', resolve);
-      archive.on('error', reject);
-      archive.finalize();
-    });
-
-    const zipBuffer = Buffer.concat(chunks);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 16);
-    const firstSubject = Object.keys(bySubject)[0] || 'submissions';
-    const zipName = filterAssignmentId
-      ? `${firstSubject.replace(/\s+/g,'_')}_${timestamp}.zip`
-      : `all_submissions_${timestamp}.zip`;
-
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${zipName}"`,
-        'Access-Control-Allow-Origin': '*',
-      },
-      body: zipBuffer.toString('base64'),
-      isBase64Encoded: true
+      headers: corsHeaders,
+      body: JSON.stringify({ submissions })
     };
   } catch (e) {
-    console.error('Download all error:', e);
-    return { statusCode: 500, body: 'Error: ' + e.message };
+    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: e.message }) };
   }
 };
