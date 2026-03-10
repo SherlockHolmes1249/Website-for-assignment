@@ -6,6 +6,7 @@
   <title>EduSubmit — Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -427,14 +428,56 @@
       });
     }
 
+    function downloadFile(id) { window.open(`/.netlify/functions/download-file?id=${id}&token=${encodeURIComponent(token)}`,'_blank'); }
+
+    // Build ZIP in the browser to avoid Netlify's 6MB function response limit
+    async function buildZip(submissionList, zipName) {
+      if (!submissionList.length) return showToast('No submissions to download.', 'error');
+
+      // Show progress
+      showToast(`Downloading ${submissionList.length} file(s)… please wait`, 'success');
+
+      const zip = new JSZip();
+      let done = 0;
+
+      for (const s of submissionList) {
+        try {
+          const res = await fetch(`/.netlify/functions/download-file?id=${s.id}&token=${encodeURIComponent(token)}`);
+          if (!res.ok) continue;
+          const blob = await res.blob();
+          const ext = (s.fileName || '').split('.').pop().toLowerCase() || 'pdf';
+          const regNo = (s.studentId || 'Unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
+          const name = (s.studentName || 'Unknown').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+          zip.file(`${regNo}_${name}.${ext}`, blob);
+          done++;
+        } catch(e) {}
+      }
+
+      if (done === 0) return showToast('Could not fetch any files.', 'error');
+
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url; a.download = zipName; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      showToast(`ZIP ready — ${done} file(s) downloaded! ✓`, 'success');
+    }
+
     function downloadByAssignment(assignmentId) {
       const id = assignmentId || currentDetailAssignmentId;
       if (!id) return showToast('No assignment selected.', 'error');
       const a = assignments.find(x => x.id === id);
       const filtered = submissions.filter(s => s.assignmentId === id);
       if (!filtered.length) return showToast('No submissions for this assignment.', 'error');
-      showToast(`Preparing ZIP for ${a?.subject || 'assignment'}…`, 'success');
-      window.open(`/.netlify/functions/download-all?token=${encodeURIComponent(token)}&assignmentId=${encodeURIComponent(id)}`, '_blank');
+      const subject = (a?.subject || 'assignment').replace(/\s+/g, '_');
+      const timestamp = new Date().toISOString().slice(0,10);
+      buildZip(filtered, `${subject}_${timestamp}.zip`);
+    }
+
+    function downloadAll() {
+      if (!submissions.length) return showToast('No submissions to download.', 'error');
+      const timestamp = new Date().toISOString().slice(0,10);
+      buildZip(submissions, `all_submissions_${timestamp}.zip`);
     }
 
     function renderRecentSubmissions() {
@@ -496,13 +539,7 @@
       catch(e){showToast('Error: '+e.message,'error');}
     }
 
-    function downloadFile(id) { window.open(`/.netlify/functions/download-file?id=${id}&token=${encodeURIComponent(token)}`,'_blank'); }
 
-    function downloadAll() {
-      if(!submissions.length)return showToast('No submissions to download.','error');
-      showToast('Preparing ZIP…','success');
-      window.open(`/.netlify/functions/download-all?token=${encodeURIComponent(token)}`,'_blank');
-    }
 
     async function deleteSubmission(id) {
       if(!confirm('Delete this submission?'))return;
