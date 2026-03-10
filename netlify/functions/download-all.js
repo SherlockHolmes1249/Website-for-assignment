@@ -16,6 +16,9 @@ exports.handler = async (event) => {
   const token = getToken(event);
   if (!verifyToken(token)) return { statusCode: 401, body: 'Unauthorized' };
 
+  // Optional: filter by a specific assignment
+  const filterAssignmentId = event.queryStringParameters?.assignmentId || null;
+
   try {
     const metaStore = getBlobStore('submissions');
     const filesStore = getBlobStore('submission-files');
@@ -25,20 +28,28 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: 'No submissions found', headers: { 'Content-Type': 'text/plain' } };
     }
 
-    const archive = archiver('zip', { zlib: { level: 6 } });
-    const chunks = [];
-    archive.on('data', chunk => chunks.push(chunk));
-
     // Collect all submission metadata
     const allMeta = [];
     for (const blob of blobs) {
       try {
         const meta = await metaStore.get(blob.key, { type: 'json' });
-        if (meta) allMeta.push(meta);
+        if (meta) {
+          // If filtering by assignment, skip ones that don't match
+          if (filterAssignmentId && meta.assignmentId !== filterAssignmentId) continue;
+          allMeta.push(meta);
+        }
       } catch (e) {}
     }
 
-    // Group by subject — each subject gets its own folder
+    if (!allMeta.length) {
+      return { statusCode: 200, body: 'No submissions found for this assignment.', headers: { 'Content-Type': 'text/plain' } };
+    }
+
+    const archive = archiver('zip', { zlib: { level: 6 } });
+    const chunks = [];
+    archive.on('data', chunk => chunks.push(chunk));
+
+    // Group by subject folder
     const bySubject = {};
     for (const meta of allMeta) {
       const folder = (meta.subject || 'Unknown')
@@ -48,7 +59,7 @@ exports.handler = async (event) => {
       bySubject[folder].push(meta);
     }
 
-    // Add files to zip — named by Registration No. + Student Name
+    // Add files — named: RegNo_StudentName.ext
     for (const [subject, metas] of Object.entries(bySubject)) {
       for (const meta of metas) {
         try {
@@ -57,9 +68,11 @@ exports.handler = async (event) => {
             const ext = (meta.fileName || '').split('.').pop().toLowerCase() || 'pdf';
             const regNo = (meta.studentId || 'Unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
             const name = (meta.studentName || 'Unknown').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
-            // Filename format: RegNo_StudentName.ext
+            // Format: RegNo_StudentName.ext  e.g. 2024-CS-045_Ali_Hassan.pdf
             const fileName = `${regNo}_${name}.${ext}`;
-            archive.append(Buffer.from(fileData), { name: `${subject}/${fileName}` });
+            // If filtering one subject, no need for a subfolder
+            const archivePath = filterAssignmentId ? fileName : `${subject}/${fileName}`;
+            archive.append(Buffer.from(fileData), { name: archivePath });
           }
         } catch (e) {}
       }
@@ -73,12 +86,16 @@ exports.handler = async (event) => {
 
     const zipBuffer = Buffer.concat(chunks);
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 16);
+    const firstSubject = Object.keys(bySubject)[0] || 'submissions';
+    const zipName = filterAssignmentId
+      ? `${firstSubject.replace(/\s+/g,'_')}_${timestamp}.zip`
+      : `all_submissions_${timestamp}.zip`;
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="submissions_${timestamp}.zip"`,
+        'Content-Disposition': `attachment; filename="${zipName}"`,
         'Access-Control-Allow-Origin': '*',
       },
       body: zipBuffer.toString('base64'),
