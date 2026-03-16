@@ -69,10 +69,6 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'No file uploaded' }) };
     }
 
-    const ext = fileName.split('.').pop().toLowerCase();
-    if (!['pdf', 'doc', 'docx'].includes(ext)) {
-      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Only PDF, DOC, DOCX allowed' }) };
-    }
 
     const submissionId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const safeFileName = `${submissionId}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
