@@ -207,7 +207,7 @@
         return `<div class="assignment-card" style="animation-delay:${i*0.07}s">
           <div class="card-top"><div class="subject-icon">${ICONS[i%ICONS.length]}</div><div class="due-badge ${s}">${labels[s]}</div></div>
           <div class="card-subject">${escHtml(a.subject)}</div>
-          <div class="card-desc">${escHtml(a.description||'Submit your assignment file (PDF or Word document).')}</div>
+          <div class="card-desc">${escHtml(a.description||'Submit your assignment file.')}</div>
           <div class="card-footer">
             <div class="due-info">Due: <span>${formatDueDate(a.dueDate)}</span><br><small>${getDaysLeft(a.dueDate)}</small></div>
             <button class="btn-submit-card" onclick="openSubmitModal('${a.id}')">Submit ↑</button>
@@ -233,7 +233,7 @@
         <div class="form-group"><label>Student ID / Roll No.</label><input type="text" id="student-id" placeholder="e.g. 2024-CS-045"></div>
         <div class="form-group"><label>Assignment File</label>
           <div class="drop-zone" id="drop-zone">
-            <input type="file" id="file-input" accept=".pdf,.doc,.docx">
+            <input type="file" id="file-input">
             <div class="drop-icon">📎</div>
             <div class="drop-text"><strong>Tap to upload</strong></div>
             <div class="drop-hint">PDF, DOC, DOCX · Max 20MB</div>
@@ -252,7 +252,7 @@
       fi.addEventListener('change',()=>{if(fi.files[0])showFile(fi.files[0]);});
     }
 
-    function showFile(f) { const ext=f.name.split('.').pop().toLowerCase(); document.getElementById('file-info').innerHTML=`<div class="file-selected"><span class="file-icon">${ext==='pdf'?'📄':'📝'}</span><div><div class="file-name">${escHtml(f.name)}</div><div class="file-size">${(f.size/1024/1024).toFixed(2)} MB</div></div></div>`; }
+    function showFile(f) { const ext=f.name.split('.').pop().toLowerCase(); const iconMap={pdf:'📄',doc:'📝',docx:'📝',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',mp4:'🎬',mp3:'🎵',zip:'🗜️',txt:'📃',pptx:'📊',xlsx:'📊',csv:'📊'}; document.getElementById('file-info').innerHTML=`<div class="file-selected"><span class="file-icon">${iconMap[ext]||'📁'}</span><div><div class="file-name">${escHtml(f.name)}</div><div class="file-size">${(f.size/1024/1024).toFixed(2)} MB</div></div></div>`; }
 
     async function submitAssignment() {
       const name=document.getElementById('student-name')?.value.trim();
@@ -263,7 +263,7 @@
       if(!sid)return showToast('Please enter your Student ID.','error');
       if(!file)return showToast('Please select a file.','error');
       const ext=file.name.split('.').pop().toLowerCase();
-      if(!['pdf','doc','docx'].includes(ext))return showToast('Only PDF, DOC, DOCX allowed.','error');
+
       if(file.size>20*1024*1024)return showToast('File too large. Max 20MB.','error');
       const btn=document.getElementById('submit-btn'); btn.disabled=true;
       document.getElementById('submit-label').innerHTML='<div class="spinner"></div> Submitting…';
