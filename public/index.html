@@ -204,13 +204,17 @@
       const labels={urgent:'🔴 Due Today',soon:'🟡 Due Soon',ok:'🟢 On Track'};
       grid.innerHTML = list.map((a,i) => {
         const s=getDueStatus(a.dueDate);
+        const pastDue=new Date(a.dueDate).getTime()<Date.now();
+        const isClosed = a.isOpen===false || (pastDue && a.isOpen!==true);
         return `<div class="assignment-card" style="animation-delay:${i*0.07}s">
-          <div class="card-top"><div class="subject-icon">${ICONS[i%ICONS.length]}</div><div class="due-badge ${s}">${labels[s]}</div></div>
+          <div class="card-top"><div class="subject-icon">${ICONS[i%ICONS.length]}</div><div class="due-badge ${isClosed?'urgent':s}">${isClosed?'⛔ Closed':labels[s]}</div></div>
           <div class="card-subject">${escHtml(a.subject)}</div>
           <div class="card-desc">${escHtml(a.description||'Submit your assignment file.')}</div>
           <div class="card-footer">
             <div class="due-info">Due: <span>${formatDueDate(a.dueDate)}</span><br><small>${getDaysLeft(a.dueDate)}</small></div>
-            <button class="btn-submit-card" onclick="openSubmitModal('${a.id}')">Submit ↑</button>
+            ${isClosed
+              ? `<button class="btn-submit-card" disabled style="opacity:0.4;cursor:not-allowed">Closed</button>`
+              : `<button class="btn-submit-card" onclick="openSubmitModal('${a.id}')">Submit ↑</button>`}
           </div>
         </div>`;
       }).join('');
@@ -229,8 +233,8 @@
     function buildForm(a) {
       return `<h2>Submit Assignment</h2>
         <div class="modal-subject-tag">📚 ${escHtml(a.subject)}</div>
-        <div class="form-group"><label>Your Full Name</label><input type="text" id="student-name" placeholder="Enter your full name" autocomplete="name"></div>
-        <div class="form-group"><label>Student ID / Roll No.</label><input type="text" id="student-id" placeholder="e.g. 2024-CS-045"></div>
+        <div class="form-group"><label>Your Full Name (optional)</label><input type="text" id="student-name" placeholder="Enter your full name" autocomplete="name"></div>
+        <div class="form-group"><label>Student ID / Roll No. (optional)</label><input type="text" id="student-id" placeholder="e.g. 2024-CS-045"></div>
         <div class="form-group"><label>Assignment File</label>
           <div class="drop-zone" id="drop-zone">
             <input type="file" id="file-input">
@@ -255,12 +259,10 @@
     function showFile(f) { const ext=f.name.split('.').pop().toLowerCase(); const iconMap={pdf:'📄',doc:'📝',docx:'📝',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',mp4:'🎬',mp3:'🎵',zip:'🗜️',txt:'📃',pptx:'📊',xlsx:'📊',csv:'📊'}; document.getElementById('file-info').innerHTML=`<div class="file-selected"><span class="file-icon">${iconMap[ext]||'📁'}</span><div><div class="file-name">${escHtml(f.name)}</div><div class="file-size">${(f.size/1024/1024).toFixed(2)} MB</div></div></div>`; }
 
     async function submitAssignment() {
-      const name=document.getElementById('student-name')?.value.trim();
-      const sid=document.getElementById('student-id')?.value.trim();
+      const name=document.getElementById('student-name')?.value.trim()||'';
+      const sid=document.getElementById('student-id')?.value.trim()||'';
       const file=document.getElementById('file-input')?.files[0];
       const note=document.getElementById('student-note')?.value.trim();
-      if(!name)return showToast('Please enter your full name.','error');
-      if(!sid)return showToast('Please enter your Student ID.','error');
       if(!file)return showToast('Please select a file.','error');
       const ext=file.name.split('.').pop().toLowerCase();
 
