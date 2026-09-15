@@ -26,9 +26,11 @@ exports.handler = async (event) => {
     };
 
     // Filename: RegNo_StudentName.ext  e.g. 2024-CS-045_Ali_Hassan.pdf
-    const regNo = (meta.studentId || 'Unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const name = (meta.studentName || 'Unknown').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
-    const downloadName = encodeURIComponent(`${regNo}_${name}.${ext}`);
+    // Missing name/regNo are skipped entirely rather than shown as "Unknown".
+    const regNo = (meta.studentId || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const name = (meta.studentName || '').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+    const baseName = [regNo, name].filter(Boolean).join('_') || meta.id;
+    const downloadName = encodeURIComponent(`${baseName}.${ext}`);
 
     return {
       statusCode: 200,
