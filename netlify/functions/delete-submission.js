@@ -1,19 +1,10 @@
-const { getStore } = require('@netlify/blobs');
+const { getBlobStore, removeRecord } = require('./_index-store');
 const { verifyToken, getToken } = require('./_auth');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Content-Type': 'application/json',
 };
-
-function getBlobStore(name) {
-  return getStore({
-    name,
-    consistency: 'strong',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_TOKEN,
-  });
-}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders, body: '' };
@@ -26,9 +17,8 @@ exports.handler = async (event) => {
     const { id } = JSON.parse(event.body || '{}');
     if (!id) return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'ID required' }) };
 
-    const metaStore = getBlobStore('submissions');
     const filesStore = getBlobStore('submission-files');
-    await Promise.all([metaStore.delete(id), filesStore.delete(id)]);
+    await Promise.all([removeRecord('submissions', id), filesStore.delete(id)]);
 
     return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true }) };
   } catch (e) {

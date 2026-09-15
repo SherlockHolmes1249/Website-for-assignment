@@ -1,4 +1,4 @@
-const { removeRecord } = require('./_index-store');
+const { getBlobStore, removeAll } = require('./_index-store');
 const { verifyToken, getToken } = require('./_auth');
 
 const corsHeaders = {
@@ -14,12 +14,17 @@ exports.handler = async (event) => {
   if (!verifyToken(token)) return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: 'Unauthorized' }) };
 
   try {
-    const { id } = JSON.parse(event.body || '{}');
-    if (!id) return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'ID required' }) };
+    const { assignmentId } = JSON.parse(event.body || '{}');
 
-    await removeRecord('assignments', id);
+    const filterFn = assignmentId ? (rec) => rec.assignmentId === assignmentId : null;
+    const { removedIds } = await removeAll('submissions', filterFn);
 
-    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true }) };
+    if (removedIds.length) {
+      const filesStore = getBlobStore('submission-files');
+      await Promise.all(removedIds.map((id) => filesStore.delete(id).catch(() => {})));
+    }
+
+    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, deletedCount: removedIds.length }) };
   } catch (e) {
     return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: e.message }) };
   }

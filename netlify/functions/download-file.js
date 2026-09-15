@@ -1,15 +1,6 @@
 // netlify/functions/download-file.js
-const { getStore } = require('@netlify/blobs');
+const { getBlobStore, readIndex } = require('./_index-store');
 const { verifyToken, getToken } = require('./_auth');
-
-function getBlobStore(name) {
-  return getStore({
-    name,
-    consistency: 'strong',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_TOKEN,
-  });
-}
 
 exports.handler = async (event) => {
   const token = getToken(event);
@@ -19,8 +10,8 @@ exports.handler = async (event) => {
   if (!id) return { statusCode: 400, body: 'Missing id' };
 
   try {
-    const metaStore = getBlobStore('submissions');
-    const meta = await metaStore.get(id, { type: 'json' });
+    const idx = await readIndex('submissions');
+    const meta = idx.items[id];
     if (!meta) return { statusCode: 404, body: 'Submission not found' };
 
     const filesStore = getBlobStore('submission-files');

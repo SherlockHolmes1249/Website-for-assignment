@@ -1,19 +1,10 @@
-const { getStore } = require('@netlify/blobs');
+const { readIndex } = require('./_index-store');
 const { verifyToken, getToken } = require('./_auth');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Content-Type': 'application/json',
 };
-
-function getBlobStore(name) {
-  return getStore({
-    name,
-    consistency: 'strong',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_TOKEN,
-  });
-}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders, body: '' };
@@ -22,20 +13,16 @@ exports.handler = async (event) => {
   if (!verifyToken(token)) return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: 'Unauthorized' }) };
 
   try {
-    const store = getBlobStore('submissions');
-    const { blobs } = await store.list();
-
-    const submissions = [];
-    for (const blob of blobs) {
-      try {
-        const data = await store.get(blob.key, { type: 'json' });
-        if (data) submissions.push(data);
-      } catch (e) {}
-    }
+    const idx = await readIndex('submissions');
+    const submissions = Object.values(idx.items);
     submissions.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 
-    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ submissions }) };
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ submissions, allTimeCount: idx.allTimeCount || 0 }),
+    };
   } catch (e) {
-    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: e.message, submissions: [] }) };
+    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: e.message, submissions: [], allTimeCount: 0 }) };
   }
 };

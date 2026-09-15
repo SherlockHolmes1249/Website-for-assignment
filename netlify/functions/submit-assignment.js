@@ -1,19 +1,10 @@
-const { getStore } = require('@netlify/blobs');
+const { getBlobStore, readIndex, upsertRecord } = require('./_index-store');
 const Busboy = require('busboy');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Content-Type': 'application/json',
 };
-
-function getBlobStore(name) {
-  return getStore({
-    name,
-    consistency: 'strong',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_TOKEN,
-  });
-}
 
 function parseMultipart(event) {
   return new Promise((resolve, reject) => {
@@ -62,36 +53,46 @@ exports.handler = async (event) => {
   try {
     const { fields, fileBuffer, fileName, fileMime } = await parseMultipart(event);
 
-    if (!fields.assignmentId || !fields.studentName || !fields.studentId) {
-      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Missing required fields' }) };
+    if (!fields.assignmentId) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Missing assignment' }) };
     }
     if (!fileBuffer || !fileName) {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'No file uploaded' }) };
     }
 
+    // Check the assignment is actually open for submissions.
+    const assignmentsIdx = await readIndex('assignments');
+    const assignment = assignmentsIdx.items[fields.assignmentId];
+    if (assignment) {
+      const pastDue = new Date(assignment.dueDate).getTime() < Date.now();
+      const manuallyOpen = assignment.isOpen === true;
+      // Closed if explicitly marked closed, OR past due and not manually reopened.
+      if (assignment.isOpen === false || (pastDue && !manuallyOpen)) {
+        return { statusCode: 403, headers: corsHeaders, body: JSON.stringify({ error: 'Submissions are closed for this assignment.' }) };
+      }
+    }
 
     const submissionId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const safeFileName = `${submissionId}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 
     const filesStore = getBlobStore('submission-files');
     await filesStore.set(submissionId, fileBuffer, {
-      metadata: { fileName, safeFileName, mimeType: fileMime, studentName: fields.studentName, subject: fields.subject || '' }
+      metadata: { fileName, safeFileName, mimeType: fileMime, studentName: fields.studentName || '', subject: fields.subject || '' }
     });
 
-    const metaStore = getBlobStore('submissions');
     const submission = {
       id: submissionId,
       assignmentId: fields.assignmentId,
       subject: fields.subject || '',
-      studentName: fields.studentName.trim(),
-      studentId: fields.studentId.trim(),
+      studentName: (fields.studentName || '').trim(),
+      studentId: (fields.studentId || '').trim(),
       note: fields.note || '',
       fileName,
       safeFileName,
       fileSize: fileBuffer.length,
       submittedAt: new Date().toISOString()
     };
-    await metaStore.setJSON(submissionId, submission);
+    await upsertRecord('submissions', submissionId, submission, { countsTowardAllTime: true });
 
     return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, submissionId }) };
   } catch (e) {

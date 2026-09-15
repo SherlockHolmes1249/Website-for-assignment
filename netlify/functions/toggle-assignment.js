@@ -1,4 +1,4 @@
-const { upsertRecord } = require('./_index-store');
+const { readIndex, upsertRecord } = require('./_index-store');
 const { verifyToken, getToken } = require('./_auth');
 
 const corsHeaders = {
@@ -14,19 +14,16 @@ exports.handler = async (event) => {
   if (!verifyToken(token)) return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: 'Unauthorized' }) };
 
   try {
-    const { subject, description, dueDate } = JSON.parse(event.body || '{}');
-    if (!subject || !dueDate) return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Subject and dueDate are required' }) };
+    const { id, isOpen } = JSON.parse(event.body || '{}');
+    if (!id || typeof isOpen !== 'boolean') {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'id and isOpen (boolean) are required' }) };
+    }
 
-    const id = `assignment_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const assignment = {
-      id,
-      subject: subject.trim(),
-      description: (description || '').trim(),
-      dueDate,
-      isOpen: true, // manual override flag — true unless admin explicitly closes it
-      createdAt: new Date().toISOString(),
-    };
+    const idx = await readIndex('assignments');
+    const assignment = idx.items[id];
+    if (!assignment) return { statusCode: 404, headers: corsHeaders, body: JSON.stringify({ error: 'Assignment not found' }) };
 
+    assignment.isOpen = isOpen;
     await upsertRecord('assignments', id, assignment);
 
     return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, assignment }) };
