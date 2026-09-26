@@ -23,7 +23,7 @@ exports.handler = async (event) => {
       subject: subject.trim(),
       description: (description || '').trim(),
       dueDate,
-      isOpen: true, // manual override flag — true unless admin explicitly closes it
+      isOpen: null, // manual override: null = auto (closes at dueDate), true = force-open past due, false = force-closed early
       createdAt: new Date().toISOString(),
     };
 
