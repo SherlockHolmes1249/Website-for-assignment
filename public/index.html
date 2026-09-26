@@ -16,14 +16,14 @@
       --sidebar-w: 240px;
     }
     html { scroll-behavior: smooth; }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; position: relative; }
+    body { background: transparent; color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; position: relative; }
     body::before {
-      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
       background: linear-gradient(120deg, #0f0f0f, #1a110d, #0f0f0f, #150a0a);
       background-size: 300% 300%;
       animation: gradientShift 15s ease infinite;
     }
-    .bg-blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .bg-blobs { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
     .bg-blob { position: absolute; filter: blur(90px); opacity: 0.15; border-radius: 50%; animation: floatBlob 20s infinite alternate ease-in-out; }
     .bg-blob.one { width: 450px; height: 450px; background: var(--accent); top: -100px; left: -100px; animation-duration: 25s; }
     .bg-blob.two { width: 350px; height: 350px; background: var(--accent2); bottom: -50px; right: -50px; animation-duration: 22s; animation-delay: -5s; }
