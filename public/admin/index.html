@@ -312,10 +312,29 @@
     </div>
   </div>
 
+  <!-- NOTE MODAL -->
+  <div class="modal-overlay" id="note-modal" onclick="closeModalOverlay(event,'note-modal')">
+    <div class="modal">
+      <span class="modal-handle"></span>
+      <button class="modal-close" onclick="closeModal('note-modal')">✕</button>
+      <h2>Student Note</h2>
+      <div class="modal-sub" id="note-modal-meta"></div>
+      <div id="note-modal-body" style="white-space:pre-wrap;word-break:break-word;font-size:0.9rem;color:var(--text);line-height:1.5"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
     let submissions=[], assignments=[], token='', allTimeCount=0;
+
+    function openNoteModal(id) {
+      const s = submissions.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('note-modal-meta').textContent = `${s.studentName || 'Anonymous'} · ${s.studentId || '—'}`;
+      document.getElementById('note-modal-body').textContent = s.note || '';
+      document.getElementById('note-modal').classList.add('open');
+    }
 
     async function doLogin() {
       const u=document.getElementById('login-user').value.trim(), p=document.getElementById('login-pass').value;
@@ -427,7 +446,7 @@
             <td><span class="student-name">${escHtml(s.studentName)||'<em style=\'color:var(--muted)\'>Anonymous</em>'}</span></td>
             <td><span class="student-id-cell" style="font-size:0.85rem;color:var(--text);font-weight:600">${escHtml(s.studentId)||'—'}</span></td>
             <td><span class="badge ${ext==='pdf'?'badge-pdf':'badge-doc'}">${ext.toUpperCase()}</span></td>
-            <td style="font-size:0.78rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.note||'—')}</td>
+            <td style="font-size:0.78rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap${s.note?';cursor:pointer':''}" title="${escHtml(s.note||'')}" ${s.note?`onclick="openNoteModal('${s.id}')"`:''}>${escHtml(s.note||'—')}</td>
             <td style="font-size:0.78rem;color:var(--muted)">${date}</td>
             <td style="white-space:nowrap">
               <button class="download-btn" onclick="downloadFile('${s.id}')">⬇</button>
