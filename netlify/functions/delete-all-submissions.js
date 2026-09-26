@@ -7,8 +7,8 @@ const corsHeaders = {
 };
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders, body: '' };
-  if (event.httpMethod !== 'DELETE') return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
+  if ((event.httpMethod || event.method) === 'OPTIONS') return { statusCode: 200, headers: corsHeaders, body: '' };
+  if ((event.httpMethod || event.method) !== 'DELETE') return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
 
   const token = getToken(event);
   if (!verifyToken(token)) return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: 'Unauthorized' }) };

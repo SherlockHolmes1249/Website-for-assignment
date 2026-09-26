@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders, body: '' };
+  if ((event.httpMethod || event.method) === 'OPTIONS') return { statusCode: 200, headers: corsHeaders, body: '' };
 
   const token = getToken(event);
   if (!verifyToken(token)) return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: 'Unauthorized' }) };

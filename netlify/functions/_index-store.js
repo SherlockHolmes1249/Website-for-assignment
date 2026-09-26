@@ -147,4 +147,7 @@ module.exports = {
   writeIndex,
   updateIndex,
   upsertRecord,
+  removeRecord,
+  removeAll,
+};
  
