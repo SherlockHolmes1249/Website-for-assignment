@@ -1,19 +1,6 @@
 // netlify/functions/admin-auth.js
 exports.handler = async (event) => {
-  // Support both v1 (httpMethod) and v2 (method) Netlify Function events
-  const httpMethod = event.httpMethod || event.method;
-  if (httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: '',
-    };
-  }
-  if (httpMethod !== 'POST') {
+  if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
