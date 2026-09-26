@@ -497,9 +497,9 @@
           const regNo = (s.studentId || '').replace(/[^a-zA-Z0-9_-]/g, '_');
           const name = (s.studentName || '').replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
           let baseName = [regNo, name].filter(Boolean).join('_') || s.id;
-          let zipName = `${baseName}.${ext}`;
-          if (zip.file(zipName)) zipName = `${baseName}_${s.id}.${ext}`; // avoid overwriting on duplicate/blank names
-          zip.file(zipName, arrayBuf);
+          let fileName = `${baseName}.${ext}`;
+          if (zip.file(fileName)) fileName = `${baseName}_${s.id}.${ext}`; // avoid overwriting on duplicate/blank names
+          zip.file(fileName, arrayBuf);
           done++;
         } catch(e) { failed++; }
         const pct = Math.round((done + failed) / total * 100);
@@ -584,46 +584,4 @@
     function filterSubmissions() { const q=document.getElementById('search-input').value.toLowerCase(); renderSubmissionsTable(submissions.filter(s=>s.studentName.toLowerCase().includes(q)||s.subject.toLowerCase().includes(q)||s.studentId.toLowerCase().includes(q))); }
 
     async function createAssignment() {
-      const subject=document.getElementById('new-subject').value.trim();
-      const desc=document.getElementById('new-desc').value.trim();
-      const due=document.getElementById('new-due').value;
-      if(!subject)return showToast('Subject name is required.','error');
-      if(!due)return showToast('Please set a due date.','error');
-      try {
-        const res=await fetch('/.netlify/functions/create-assignment',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({subject,description:desc,dueDate:new Date(due).toISOString()})});
-        const data=await res.json();
-        if(data.success){closeModal('create-modal');showToast('Assignment created! ✓','success');loadAll();}
-        else throw new Error(data.error);
-      } catch(e){showToast('Error: '+e.message,'error');}
-    }
-
-    async function deleteAssignment(id) {
-      if(!confirm('Delete this assignment?'))return;
-      try { const res=await fetch('/.netlify/functions/delete-assignment',{method:'DELETE',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({id})}); const data=await res.json(); if(data.success){showToast('Deleted.','success');loadAll();}else throw new Error(data.error); }
-      catch(e){showToast('Error: '+e.message,'error');}
-    }
-
-
-
-    async function deleteSubmission(id) {
-      if(!confirm('Delete this submission?'))return;
-      try { const res=await fetch('/.netlify/functions/delete-submission',{method:'DELETE',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({id})}); const data=await res.json(); if(data.success){showToast('Deleted.','success');loadAll();}else throw new Error(data.error); }
-      catch(e){showToast('Error: '+e.message,'error');}
-    }
-
-    function showPage(page,el) {
-      document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); el.classList.add('active');
-      ['overview','assignments','submissions'].forEach(p=>document.getElementById('page-'+p).style.display=p===page?'':'none');
-      document.getElementById('page-title').textContent={overview:'Dashboard',assignments:'Assignments',submissions:'Submissions'}[page];
-      closeSidebar();
-    }
-
-    function openCreateModal() { document.getElementById('create-modal').classList.add('open'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-    function closeModalOverlay(e,id) { if(e.target===document.getElementById(id))closeModal(id); }
-
-    function showToast(msg,type='success') { const t=document.getElementById('toast'); t.innerHTML=`<span>${type==='success'?'✓':'✕'}</span> ${escHtml(msg)}`; t.className=`toast ${type} show`; setTimeout(()=>t.className='toast',3500); }
-    function escHtml(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  </script>
-</body>
-</html>
+      const subject=document.getElementById('new-subject
