@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SIU.best — Admin</title>
+  <title>EduSubmit — Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -11,8 +11,8 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #242424; --surface3: #2d2d2d;
-      --border: rgba(255,255,255,0.1); --accent: #ff6719; --accent2: #ff8b4d;
-      --accent3: #ffae80; --text: #f3f3f3; --muted: #a0a0a0;
+      --border: rgba(255,255,255,0.1); --accent: #d97757; --accent2: #e2986f;
+      --accent3: #edb796; --text: #f3f3f3; --muted: #a0a0a0;
       --success: #34d399; --warning: #fbbf24; --danger: #f87171;
       --sidebar-w: 240px;
     }
@@ -46,7 +46,7 @@
     .field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 0.75rem 1rem; border-radius: 6px; font-size: 16px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
     .field input:focus { border-color: var(--accent); }
     .btn-login { width: 100%; background: var(--accent); color: white; border: none; padding: 0.85rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 0.5rem; transition: all 0.3s; -webkit-appearance: none; }
-    .btn-login:hover { box-shadow: 0 4px 12px rgba(255,103,25,0.2); }
+    .btn-login:hover { box-shadow: 0 4px 12px rgba(217,119,87,0.2); }
     .btn-login:active { transform: scale(0.98); }
     .login-error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2); color: var(--danger); padding: 0.65rem 1rem; border-radius: 8px; font-size: 0.82rem; margin-top: 1rem; display: none; }
 
@@ -64,12 +64,12 @@
 
     .sidebar-logo { padding: 1.5rem 1.2rem 1rem; border-bottom: 1px solid var(--border); }
     .sidebar-logo .brand { font-family: 'Lora', serif; font-weight: 800; font-size: 1.2rem; color: var(--text); }
-    .sidebar-logo .role-badge { display: inline-block; background: rgba(124,107,255,0.12); color: var(--accent); font-size: 0.68rem; padding: 0.18rem 0.55rem; border-radius: 999px; margin-top: 0.3rem; font-weight: 500; letter-spacing: 0.05em; }
+    .sidebar-logo .role-badge { display: inline-block; background: rgba(217,119,87,0.12); color: var(--accent); font-size: 0.68rem; padding: 0.18rem 0.55rem; border-radius: 999px; margin-top: 0.3rem; font-weight: 500; letter-spacing: 0.05em; }
     .sidebar-nav { padding: 1rem 0.7rem; flex: 1; }
     .nav-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0 0.6rem; margin-bottom: 0.5rem; margin-top: 1rem; }
     .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--muted); transition: all 0.2s; margin-bottom: 0.15rem; }
     .nav-item:hover { background: var(--surface2); color: var(--text); }
-    .nav-item.active { background: rgba(124,107,255,0.15); color: var(--accent); }
+    .nav-item.active { background: rgba(217,119,87,0.15); color: var(--accent); }
     .nav-item .icon { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
     .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border); }
     .btn-logout { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 0.55rem; border-radius: 8px; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
@@ -87,7 +87,7 @@
     .topbar-right { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
 
     .btn-primary-sm { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; -webkit-appearance: none; }
-    .btn-primary-sm:hover { box-shadow: 0 4px 12px rgba(255,103,25,0.2); }
+    .btn-primary-sm:hover { box-shadow: 0 4px 12px rgba(217,119,87,0.2); }
     .btn-outline-sm { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
     .btn-outline-sm:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -124,7 +124,7 @@
     .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600; }
     .badge-pdf { background: rgba(248,113,113,0.12); color: #ff8888; border: 1px solid rgba(248,113,113,0.2); }
     .badge-doc { background: rgba(107,160,255,0.12); color: #88b4ff; border: 1px solid rgba(107,160,255,0.2); }
-    .badge-new { background: rgba(124,107,255,0.12); color: var(--accent); border: 1px solid rgba(124,107,255,0.25); }
+    .badge-new { background: rgba(217,119,87,0.12); color: var(--accent); border: 1px solid rgba(217,119,87,0.25); }
     .download-btn { background: var(--surface3); border: 1px solid var(--border); color: var(--text); padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
     .download-btn:hover { border-color: var(--accent3); color: var(--accent3); }
     .delete-btn { background: transparent; border: 1px solid transparent; color: var(--muted); padding: 0.3rem 0.5rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
@@ -165,7 +165,7 @@
     .form-group select option { background: var(--surface2); }
     .form-group textarea { resize: vertical; min-height: 65px; }
     .btn-full { width: 100%; background: var(--accent); color: white; border: none; padding: 0.85rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.3s; -webkit-appearance: none; }
-    .btn-full:hover { box-shadow: 0 4px 12px rgba(255,103,25,0.2); transform: translateY(-1px); }
+    .btn-full:hover { box-shadow: 0 4px 12px rgba(217,119,87,0.2); transform: translateY(-1px); }
     .btn-full:active { transform: scale(0.98); }
 
     /* TOAST */
@@ -182,7 +182,7 @@
   <div id="login-screen">
     <div class="login-box">
       <div class="login-logo">
-        <a href="../index.html" style="text-decoration:none"><div class="brand">SIU.best</div></a>
+        <a href="../index.html" style="text-decoration:none"><div class="brand">EduSubmit</div></a>
         <div class="sub">Admin Portal</div>
       </div>
       <div class="login-card">
@@ -203,7 +203,7 @@
 
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
-        <a href="../index.html" style="text-decoration:none"><div class="brand">SIU.best</div></a>
+        <a href="../index.html" style="text-decoration:none"><div class="brand">EduSubmit</div></a>
         <div class="role-badge">Admin</div>
       </div>
       <nav class="sidebar-nav">
@@ -380,7 +380,7 @@
     }
 
     async function loadAssignments() {
-      try { const res=await fetch('/.netlify/functions/get-assignments'); const data=await res.json(); assignments=data.assignments||[]; }
+      try { const res=await fetch('/.netlify/functions/get-assignments?admin=1'); const data=await res.json(); assignments=data.assignments||[]; }
       catch(e){assignments=[];}
     }
 
@@ -498,7 +498,7 @@
       if (!el) {
         el = document.createElement('div');
         el.id = 'zip-progress';
-        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1a1a26;border:1px solid rgba(124,107,255,0.4);border-radius:14px;padding:1rem 1.5rem;z-index:3000;min-width:280px;max-width:calc(100vw - 2rem);font-family:DM Sans,sans-serif;color:#f0f0f8;font-size:0.88rem;box-shadow:0 8px 32px rgba(0,0,0,0.4)';
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#242424;border:1px solid rgba(217,119,87,0.4);border-radius:14px;padding:1rem 1.5rem;z-index:3000;min-width:280px;max-width:calc(100vw - 2rem);font-family:Inter,sans-serif;color:#f3f3f3;font-size:0.88rem;box-shadow:0 8px 32px rgba(0,0,0,0.4)';
         document.body.appendChild(el);
       }
       el.innerHTML = msg;
@@ -515,7 +515,7 @@
       if (!submissionList.length) return showToast('No submissions to download.', 'error');
 
       const total = submissionList.length;
-      showProgress(`<div style="margin-bottom:0.5rem;font-weight:600">📦 Building ZIP…</div><div id="zip-status">Starting…</div><div style="margin-top:0.7rem;background:rgba(255,255,255,0.1);border-radius:999px;height:6px;overflow:hidden"><div id="zip-bar" style="height:100%;background:linear-gradient(90deg,#7c6bff,#ff6b9d);width:0%;transition:width 0.3s;border-radius:999px"></div></div><div style="margin-top:0.4rem;font-size:0.75rem;color:#7878a0" id="zip-count">0 / ${total}</div>`);
+      showProgress(`<div style="margin-bottom:0.5rem;font-weight:600">📦 Building ZIP…</div><div id="zip-status">Starting…</div><div style="margin-top:0.7rem;background:rgba(255,255,255,0.1);border-radius:999px;height:6px;overflow:hidden"><div id="zip-bar" style="height:100%;background:linear-gradient(90deg,#d97757,#ff8b4d);width:0%;transition:width 0.3s;border-radius:999px"></div></div><div style="margin-top:0.4rem;font-size:0.75rem;color:#a0a0a0" id="zip-count">0 / ${total}</div>`);
 
       const zip = new JSZip();
       let done = 0;
@@ -670,6 +670,8 @@
     function showPage(page,el) {
       document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); el.classList.add('active');
       ['overview','assignments','submissions'].forEach(p=>document.getElementById('page-'+p).style.display=p===page?'':'none');
+      document.getElementById('page-assignment-detail').style.display='none';
+      currentDetailAssignmentId = null;
       document.getElementById('page-title').textContent={overview:'Dashboard',assignments:'Assignments',submissions:'Submissions'}[page];
       closeSidebar();
     }
