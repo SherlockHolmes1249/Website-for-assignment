@@ -16,21 +16,15 @@
       --success: #34d399; --warning: #fbbf24; --danger: #f87171;
       --sidebar-w: 240px;
     }
-    html { background: #0f0f0f; height: 100%; overflow-x: hidden; }
-    body {
-      background: #0f0f0f; color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh;
-      overflow-x: hidden; position: relative; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none;
-    }
+    body { background: transparent; color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; position: relative; }
     body::before {
-      content: ''; position: fixed; inset: -1px; pointer-events: none; z-index: -1;
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
       background: linear-gradient(120deg, #0f0f0f, #1a110d, #0f0f0f, #150a0a);
       background-size: 300% 300%;
       animation: gradientShift 15s ease infinite;
-      transform: translateZ(0);
-      will-change: background-position;
     }
-    .bg-blobs { position: fixed; inset: -1px; z-index: -1; pointer-events: none; overflow: hidden; transform: translateZ(0); }
-    .bg-blob { position: absolute; filter: blur(90px); opacity: 0.15; border-radius: 50%; animation: floatBlob 20s infinite alternate ease-in-out; transform: translateZ(0); will-change: transform; }
+    .bg-blobs { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+    .bg-blob { position: absolute; filter: blur(90px); opacity: 0.15; border-radius: 50%; animation: floatBlob 20s infinite alternate ease-in-out; }
     .bg-blob.one { width: 450px; height: 450px; background: var(--accent); top: -100px; left: -100px; animation-duration: 25s; }
     .bg-blob.two { width: 350px; height: 350px; background: var(--accent2); bottom: -50px; right: -50px; animation-duration: 22s; animation-delay: -5s; }
     .bg-blob.three { width: 400px; height: 400px; background: #3d1b09; top: 40%; left: 40%; animation-duration: 28s; animation-delay: -10s; }
